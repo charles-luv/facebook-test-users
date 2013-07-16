@@ -19,6 +19,12 @@ def load_users(app_id, access_token):
     f = urllib2.urlopen("https://%s/%s/accounts/test-users?%s" % (GRAPH_URL, app_id, access_token))
     return simplejson.loads(f.read())['data']
 
+def create_users(app_id, access_token, number, installed=None, permissions=None):
+    #TODO: This should probably process them in parallel, via start_new_thread.
+    for i in range(number):
+        print 'Creating user number {0}...'.format(i)
+        response = create_user(app_id, access_token, installed, permissions)
+
 def create_user(app_id, access_token, installed=None, permissions=None):
     data = {}
     if installed is not None:
@@ -143,17 +149,25 @@ if __name__ == '__main__':
             if len(input) != 0:
                 cmd = input.strip()
                 if cmd == '?':
-                    print "Command action\n  a  Add user\n  l  List users\n  m  Modify user\n  r  Reload user list\n  d  Delete user\n  f  Friend users\n  q  Quit"
-                elif cmd == 'a':
+                    print "Command action\n  a  Add user\n  aa Add multiple users\n  l  List users\n  m  Modify user\n  r  Reload user list\n  d  Delete user\n  f  Friend users\n  q  Quit"
+                elif cmd == 'a' or cmd == 'aa':
                     installed = question('Installed', ['Y', 'N'])
                     installed_options = {'Y': 'true', 'N': 'false'}
-                    permissions = raw_input(' Permissions (comma seperated): ')
-                    new_user = create_user(app_id,
-                                           access_token,
-                                           installed_options[installed],
-                                           permissions)
-                    users = load_users(app_id, access_token)
-                    print "User added."
+                    permissions = raw_input(' Permissions (comma separated): ')
+                    if cmd == 'a':
+                        new_user = create_user(app_id,
+                                             access_token,
+                                             installed_options[installed],
+                                             permissions)
+                        users = load_users(app_id, access_token)
+                        print "User added."
+                    elif cmd == 'aa':
+                        number = raw_input(' How many: ')
+                        create_users(app_id,
+                                    access_token,
+                                    int(number),
+                                    installed_options[installed],
+                                    permissions)
                 elif cmd == 'l':
                     print_users(users)
                 elif cmd == 'r':
